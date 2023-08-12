@@ -1,4 +1,4 @@
-package hlpr
+package thelper
 
 import (
 	"fmt"
