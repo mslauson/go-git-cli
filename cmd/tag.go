@@ -4,7 +4,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -40,22 +39,30 @@ var tagCmd = &cobra.Command{
 	Short: "tag helper",
 	Long:  `tag helper for tagging the repo`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("tag called")
+		repo, err := git.PlainOpen("./")
+
+		p := tea.NewProgram(initialTagChoices())
+		val, err := p.Run()
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+		}
+
+		switch val.View() {
+		case "Patch":
+			handlePatch(repo)
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(tagCmd)
-	p := tea.NewProgram(initialTagChoices())
-	val, err := p.Run()
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
+}
 
-	switch val {
-	case "Patch":
-	}
+func handlePatch(repo *git.Repository) {
+	latestTag := incPatch(repo)
+
+	createTag(repo, latestTag, "HEAD")
 }
 
 func getTag(repo *git.Repository) string {
