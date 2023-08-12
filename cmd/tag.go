@@ -4,6 +4,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -28,7 +29,7 @@ func initialTagChoices() th.ListModel {
 	const height = 14
 
 	l := list.New(tagChoices, th.ItemDelegate{}, width, height)
-	l.Title = "What do you want for dinner?"
+	l.Title = "What Type of Tag?"
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	l.Styles.Title = th.TitleStyle
@@ -53,7 +54,15 @@ var tagCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		switch val.View() {
+		trimVal := strings.ReplaceAll(val.View(), "\n", " ")
+		trimVal = strings.TrimSpace(trimVal)
+		spaceReg := regexp.MustCompile(`\s+`)
+		op := spaceReg.Split(trimVal, -1)
+
+		log.Println("op:", op)
+		log.Println("op:", op[1])
+
+		switch op[1] {
 		case "Patch":
 			handlePatch(repo)
 		}
@@ -67,8 +76,10 @@ func init() {
 
 // handlePatch handles the patch tag choice and increments the patch tag
 func handlePatch(repo *git.Repository) {
+	log.Println("patch")
 	latestTag := incPatch(repo)
 
+	log.Println("Creating tag", latestTag)
 	createTag(repo, latestTag, "HEAD")
 }
 
@@ -76,7 +87,7 @@ func handlePatch(repo *git.Repository) {
 func incPatch(repo *git.Repository) string {
 	tags, err := repo.Tags()
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	var latestTag string
@@ -91,7 +102,7 @@ func incPatch(repo *git.Repository) string {
 		return nil
 	})
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	sort.Strings(versions)
@@ -104,6 +115,8 @@ func incPatch(repo *git.Repository) string {
 	patch++
 	parts[2] = strconv.Itoa(patch)
 	newTag := strings.Join(parts, ".")
+
+	fmt.Println(newTag)
 	return newTag
 }
 
