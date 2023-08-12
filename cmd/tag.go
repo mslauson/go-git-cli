@@ -12,24 +12,29 @@ import (
 	"strings"
 
 	th "gitea.slauson.io/mslauson/ggit/thelper"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/spf13/cobra"
 )
 
-var tagChoices = []string{"Patch", "Minor", "Major"}
+// tagChoices is the list of choices for the tag command
+var tagChoices = []list.Item{th.Item("Patch"), th.Item("Minor"), th.Item("Major")}
 
-func initialTagChoices() th.TeaChoices {
-	return th.TeaChoices{
-		// Our to-do list is a grocery list
-		Choices: tagChoices,
+// initialTagChoices creates the initial bubble tea list model for the tag commandj
+func initialTagChoices() th.ListModel {
+	const width = 20
+	const height = 14
 
-		// A map which indicates which choices are selected. We're using
-		// the  map like a mathematical set. The keys refer to the indexes
-		// of the `choices` slice, above.
-		Selected: make(map[int]struct{}),
-	}
+	l := list.New(tagChoices, th.ItemDelegate{}, width, height)
+	l.Title = "What do you want for dinner?"
+	l.SetShowStatusBar(false)
+	l.SetFilteringEnabled(false)
+	l.Styles.Title = th.TitleStyle
+	l.Styles.PaginationStyle = th.PaginationStyle
+	l.Styles.HelpStyle = th.HelpStyle
+	return th.ListModel{List: l}
 }
 
 // tagCmd represents the tag command
@@ -55,24 +60,19 @@ var tagCmd = &cobra.Command{
 	},
 }
 
+// Adds tagCmd to rootCmd
 func init() {
 	rootCmd.AddCommand(tagCmd)
 }
 
+// handlePatch handles the patch tag choice and increments the patch tag
 func handlePatch(repo *git.Repository) {
 	latestTag := incPatch(repo)
 
 	createTag(repo, latestTag, "HEAD")
 }
 
-func getTag(repo *git.Repository) string {
-	inputTag, ok := os.LookupEnv("INPUT_TAG")
-	if !ok {
-		return incPatch(repo)
-	}
-	return inputTag
-}
-
+// incPatch increments the patch version of the latest tag
 func incPatch(repo *git.Repository) string {
 	tags, err := repo.Tags()
 	if err != nil {
@@ -99,23 +99,24 @@ func incPatch(repo *git.Repository) string {
 		latestTag = versions[len(versions)-1]
 	}
 
-	// Increment the patch version
 	parts := strings.Split(latestTag, ".")
 	patch, _ := strconv.Atoi(parts[2])
 	patch++
 	parts[2] = strconv.Itoa(patch)
 	newTag := strings.Join(parts, ".")
 	return newTag
-	// Create the new tag
 }
 
-func createTag(repo *git.Repository, tag string, commit string) {
+// createTag creates a new tag on HEAD
+func createTag(repo *git.Repository, tag string, commit string) error {
 	_, err := repo.CreateTag(
 		tag,
 		plumbing.NewHash(commit),
 		nil,
-	) // Replace "abc123" with your commit hash
+	)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
