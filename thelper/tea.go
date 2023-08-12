@@ -16,7 +16,7 @@ func (tc TeaChoices) Init() tea.Cmd {
 	return nil
 }
 
-func (tc TeaChoices) Update(msg tea.Msg) (tea.TeaChoices, tea.Cmd) {
+func (tc TeaChoices) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 
@@ -24,28 +24,28 @@ func (tc TeaChoices) Update(msg tea.Msg) (tea.TeaChoices, tea.Cmd) {
 
 		// These keys should exit the program.
 		case "ctrl+c", "q":
-			return m, tea.Quit
+			return tc, tea.Quit
 
 		// The "up" and "k" keys move the cursor up
 		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
+			if tc.Cursor > 0 {
+				tc.Cursor--
 			}
 
 		// The "down" and "j" keys move the cursor down
 		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
+			if tc.Cursor < len(tc.Choices)-1 {
+				tc.Cursor++
 			}
 
 		// The "enter" key and the spacebar (a literal space) toggle
 		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
-			_, ok := m.selected[m.cursor]
+			_, ok := tc.Selected[tc.Cursor]
 			if ok {
-				delete(m.selected, m.cursor)
+				delete(tc.Selected, tc.Cursor)
 			} else {
-				m.selected[m.cursor] = struct{}{}
+				tc.Selected[tc.Cursor] = struct{}{}
 			}
 		}
 	}
