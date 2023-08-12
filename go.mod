@@ -1,4 +1,4 @@
-module gitea.slauson.io/mslauson/go-git-cli
+module gitea.slauson.io/mslauson/ggit
 
 go 1.21.0
 
