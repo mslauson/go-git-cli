@@ -92,35 +92,35 @@ func (tc TeaChoices) View() string {
 const listHeight = 14
 
 var (
-	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
-	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+	TitleStyle        = lipgloss.NewStyle().MarginLeft(2)
+	ItemStyle         = lipgloss.NewStyle().PaddingLeft(4)
+	SelectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
+	PaginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	HelpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
+	QuitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
 )
 
-type item string
+type Item string
 
-func (i item) FilterValue() string { return "" }
+func (i Item) FilterValue() string { return "" }
 
-type itemDelegate struct{}
+type ItemDelegate struct{}
 
-func (d itemDelegate) Height() int                             { return 1 }
-func (d itemDelegate) Spacing() int                            { return 0 }
-func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
-func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(item)
+func (d ItemDelegate) Height() int                             { return 1 }
+func (d ItemDelegate) Spacing() int                            { return 0 }
+func (d ItemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
+func (d ItemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
+	i, ok := listItem.(Item)
 	if !ok {
 		return
 	}
 
 	str := fmt.Sprintf("%d. %s", index+1, i)
 
-	fn := itemStyle.Render
+	fn := ItemStyle.Render
 	if index == m.Index() {
 		fn = func(s ...string) string {
-			return selectedItemStyle.Render("> " + strings.Join(s, " "))
+			return SelectedItemStyle.Render("> " + strings.Join(s, " "))
 		}
 	}
 
@@ -128,9 +128,9 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 }
 
 type ListModel struct {
-	list     list.Model
-	choice   string
-	quitting bool
+	List     list.Model
+	Choice   string
+	Quitting bool
 }
 
 func (lm ListModel) Init() tea.Cmd {
@@ -140,35 +140,35 @@ func (lm ListModel) Init() tea.Cmd {
 func (lm ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		lm.list.SetWidth(msg.Width)
+		lm.List.SetWidth(msg.Width)
 		return lm, nil
 
 	case tea.KeyMsg:
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
-			lm.quitting = true
+			lm.Quitting = true
 			return lm, tea.Quit
 
 		case "enter":
-			i, ok := lm.list.SelectedItem().(item)
+			i, ok := lm.List.SelectedItem().(Item)
 			if ok {
-				lm.choice = string(i)
+				lm.Choice = string(i)
 			}
 			return lm, tea.Quit
 		}
 	}
 
 	var cmd tea.Cmd
-	lm.list, cmd = lm.list.Update(msg)
+	lm.List, cmd = lm.List.Update(msg)
 	return lm, cmd
 }
 
 func (lm ListModel) View() string {
-	if lm.choice != "" {
-		return quitTextStyle.Render(fmt.Sprintf("Selected %s", lm.choice))
+	if lm.Choice != "" {
+		return QuitTextStyle.Render(fmt.Sprintf("Selected %s", lm.Choice))
 	}
-	if lm.quitting {
-		return quitTextStyle.Render("Aborting...")
+	if lm.Quitting {
+		return QuitTextStyle.Render("Aborting...")
 	}
-	return "\n" + lm.list.View()
+	return "\n" + lm.List.View()
 }
